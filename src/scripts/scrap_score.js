@@ -53,11 +53,12 @@ const scrap_score = async (page, score) => {
     await page.waitForSelector('#jmuse-scroller-component > div');
     // get the div with the id of jmuse-scroller-component
     let divs = await page.$$('#jmuse-scroller-component > div');
+    console.log('divs: ', divs.length);
     let next_page = page_checklist.next();
+    console.log('next_page: ', next_page);
     while(page_checklist.isNotDone()) {
         try {
             // scroll to the div
-            await divs[next_page].scrollIntoViewIfNeeded();
             console.log('clicking on page:', next_page);
             divs[next_page].click();
         } catch (error) {
@@ -65,7 +66,6 @@ const scrap_score = async (page, score) => {
             console.log('error: ', error.message);
         }
         // get the div
-        await wait.for.shortTime();
         next_page = page_checklist.next();
     }
     // remove listener

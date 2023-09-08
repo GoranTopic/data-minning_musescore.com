@@ -6,6 +6,7 @@ import scrap_scores_urls from './scripts/scrap_scores_urls.js';
 import scrap_score from './scripts/scrap_score.js';
 import { KeyValueStore } from 'crawlee';
 
+
 // domain of the official scores
 let official_scores = 'https://musescore.com/sheetmusic/official'
 
@@ -13,8 +14,8 @@ let official_scores = 'https://musescore.com/sheetmusic/official'
 const browser = await chromium.launch({
 	headless: false,
 });
-// context
-const context = await browser.newContext();
+
+
 // make checklist of all of the music scores
 let scores_name = 'official_scores';
 let scores_checklist = new Checklist([], { name: scores_name, path: './storage/checklists/' } );
@@ -22,7 +23,9 @@ let scores_checklist = new Checklist([], { name: scores_name, path: './storage/c
 // make key value store
 const dataset = await KeyValueStore.open(scores_name);
 
-let page = await login(context);
+// login and get the page
+let page = await login(browser);
+
 
 // await for some time
 await wait.for.shortTime()

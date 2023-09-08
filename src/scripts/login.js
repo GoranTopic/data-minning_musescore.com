@@ -1,5 +1,6 @@
 import wait from 'waiting-for-js'
 import dotenv from 'dotenv';
+import ProxyRotator from 'proxy-rotator-js'
 import fs from 'fs';
 dotenv.config();
 
@@ -8,6 +9,9 @@ let password = process.env.MUSESCORE_PASSWORD;
 
 let login_url = 'https://musescore.com/user/login';
 let domain = 'https://musescore.com/';
+
+// proxy rotator
+let proxy_rotator = new ProxyRotator('./storage/proxies/proxyscrape_premium_http_proxies.txt')
 
 
 const login_script = async page => {
@@ -33,13 +37,37 @@ const login_script = async page => {
     return true;    
 }
 
-const login = async context => {
+const login = async browser => {
+    /* check if there is a cookies.json file in the storage folder
+     * if cookies.json exists, go to homepage
+     * else try to login
+     * if login success, save the cookies to cookies.json
+     */
+    // context
+    let context = await browser.newContext();
     // if cookies.json does not exist
     let page;
     if(!fs.existsSync('cookies.json')) {
         // open a new page
         page = await context.newPage();
-        let isLogged = await login_script(page);
+        let isLogged = false;
+        // try to login 
+        try {
+            isLogged = await login_script(page);
+        } catch (e) {
+            console.log(e);
+            console.log('TimeoutError while login in');
+            console.log('changing proxy');
+            await page.close();
+            // recreate the content with new proxy
+            context = await browser.newContext({
+                proxy: { server: proxy_rotator.next(), },
+            });
+            // make new page
+            page = await context.newPage();
+            // try to login in again with new proxy
+            isLogged = await login_script(page);
+        }
         if(isLogged) {
             // go to the domain
             console.log('login success');
