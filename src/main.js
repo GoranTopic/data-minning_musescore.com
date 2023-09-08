@@ -12,7 +12,7 @@ let official_scores = 'https://musescore.com/sheetmusic/official'
 
 // launch playwrigth
 const browser = await chromium.launch({
-	headless: false,
+	headless: true,
 });
 
 
@@ -24,8 +24,7 @@ let scores_checklist = new Checklist([], { name: scores_name, path: './storage/c
 const dataset = await KeyValueStore.open(scores_name);
 
 // login and get the page
-let page = await login(browser);
-
+let [ page, context ] = await login(browser);
 
 // await for some time
 await wait.for.shortTime()

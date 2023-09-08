@@ -8,23 +8,21 @@ let images = await KeyValueStore.open('images');
 const scrap_score = async (page, score) => {
     // make a checklist of the score pages
     let numPages = Number(score.pageCount.split(' ')[0]);
-    console.log('numPages: ', numPages);
     let pageArray = Array(numPages).fill(0).map((e, i) => i);
     // shuffle the array`
-    pageArray = pageArray.sort(() => Math.random() - 0.5);
-    let page_checklist = new Checklist(pageArray);
+    //pageArray = pageArray.sort(() => Math.random() - 0.5);
+    let page_checklist = new Checklist(pageArray, { recalc_on_check: true } );
 
     // set the listener
     set_listener(page, async (request, response) => {
         // get type of content
         let url = request.url();
-        console.log('url: ', url);
         let page_num = url.split('/score_')[1].split('.svg')[0];
         // make string into intere
         page_num = Number(page_num);
         if(page_checklist._checklist === null) return
         if(page_checklist.isChecked(page_num)) return;
-        console.log('cheking: ', page_num);
+        console.log('intercepted recived page ', page_num);
         // get the buffer from the response
         let buffer = await response.body();
         // save the buffer
@@ -53,19 +51,23 @@ const scrap_score = async (page, score) => {
     await page.waitForSelector('#jmuse-scroller-component > div');
     // get the div with the id of jmuse-scroller-component
     let divs = await page.$$('#jmuse-scroller-component > div');
-    console.log('divs: ', divs.length);
     let next_page = page_checklist.next();
-    console.log('next_page: ', next_page);
     while(page_checklist.isNotDone()) {
+        if(next_page === null){
+            return false;
+        }
         try {
             // scroll to the div
+            console.log('score: ', score.author);
             console.log('clicking on page:', next_page);
-            divs[next_page].click();
+            await divs[next_page].click();
+            await wait.for.shortTime();
         } catch (error) {
             console.log('error: ', error);
             console.log('error: ', error.message);
         }
         // get the div
+        page_checklist._calcMissing();
         next_page = page_checklist.next();
     }
     // remove listener

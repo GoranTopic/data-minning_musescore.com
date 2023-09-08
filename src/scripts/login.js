@@ -13,7 +13,6 @@ let domain = 'https://musescore.com/';
 // proxy rotator
 let proxy_rotator = new ProxyRotator('./storage/proxies/proxyscrape_premium_http_proxies.txt')
 
-
 const login_script = async page => {
     // go to login page
     await page.goto(login_url);
@@ -44,7 +43,9 @@ const login = async browser => {
      * if login success, save the cookies to cookies.json
      */
     // context
-    let context = await browser.newContext();
+    let context = await browser.newContext({
+        proxy: { server: proxy_rotator.next() },
+    });
     // if cookies.json does not exist
     let page;
     if(!fs.existsSync('cookies.json')) {
@@ -61,7 +62,7 @@ const login = async browser => {
             await page.close();
             // recreate the content with new proxy
             context = await browser.newContext({
-                proxy: { server: proxy_rotator.next(), },
+                proxy: { server: proxy_rotator.next() },
             });
             // make new page
             page = await context.newPage();
@@ -87,7 +88,7 @@ const login = async browser => {
         // go to the domain
         await page.goto(domain, { timeout: 1000000 });
     }
-    return page;
+    return [page, context];
 }
 
 
